@@ -1,0 +1,17 @@
+{% if src_stats %}
+{% for src_path, stats in src_stats|dictsort %}
+{% if stats.percent_covered < 100 %}
+{% for line in stats.violation_lines %}
+{% set lines = line.split('-') %}
+{% if lines[1] %}
+{{ src_path }}:{{ lines[0] }}: E999 Lines {{lines[0]}}-{{lines[1]}} are not covered in tests!
+{% else %}
+{{ src_path }}:{{ lines[0] }}: E999 Line {{lines[0]}} is not covered in tests!
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% else %}
+No lines with coverage information in this diff.
+-------------
+{% endif %}

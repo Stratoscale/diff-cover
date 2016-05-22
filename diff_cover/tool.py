@@ -17,7 +17,7 @@ from diff_cover.git_diff import GitDiffTool
 from diff_cover.git_path import GitPathTool
 from diff_cover.report_generator import (
     HtmlReportGenerator, StringReportGenerator,
-    HtmlQualityReportGenerator, StringQualityReportGenerator
+    HtmlQualityReportGenerator, StringQualityReportGenerator, Flake8ReportGenerator
 )
 from diff_cover.violationsreporters.base import QualityReporter
 from diff_cover.violationsreporters.violations_reporter import (
@@ -87,6 +87,13 @@ def parse_coverage_args(argv):
         type=str,
         default=None,
         help=CSS_FILE_HELP,
+    )
+
+    parser.add_argument(
+        '--flake8-report',
+        action='store_true',
+        default=False,
+        help=COMPARE_BRANCH_HELP
     )
 
     parser.add_argument(
@@ -198,7 +205,7 @@ def parse_quality_args(argv):
     return vars(parser.parse_args(argv))
 
 
-def generate_coverage_report(coverage_xml, compare_branch, html_report=None, css_file=None, ignore_unstaged=False):
+def generate_coverage_report(coverage_xml, compare_branch, html_report=None, flake8_report=False, css_file=None, ignore_unstaged=False):
     """
     Generate the diff coverage report, using kwargs from `parse_args()`.
     """
@@ -219,7 +226,10 @@ def generate_coverage_report(coverage_xml, compare_branch, html_report=None, css
             with open(css_file, "wb") as output_file:
                 reporter.generate_css(output_file)
 
-    reporter = StringReportGenerator(coverage, diff)
+    if flake8_report is not None:
+        reporter = Flake8ReportGenerator(coverage, diff)
+    else:
+        reporter = StringReportGenerator(coverage, diff)
     output_file = sys.stdout if six.PY2 else sys.stdout.buffer
 
     # Generate the report
@@ -283,6 +293,7 @@ def main(argv=None, directory=None):
             arg_dict['coverage_xml'],
             arg_dict['compare_branch'],
             html_report=arg_dict['html_report'],
+            flake8_report=arg_dict['flake8_report'],
             css_file=arg_dict['external_css_file'],
             ignore_unstaged=arg_dict['ignore_unstaged'],
         )
